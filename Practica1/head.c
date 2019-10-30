@@ -1,3 +1,3 @@
 int head(int n1, int n2){
-	return n1+5;
+	return n1+n2;
 }
