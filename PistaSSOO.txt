@@ -1,0 +1,7 @@
+char ** lineas (Puntero a los char que recibo porque por parametros son  char*
+char ** lineas = (char**) malloc(N*sizeof(char*)); Array de lineas de puntero a char* pero no tengo la memoria para el array solo tengo el array de punteros
+for(int=0;i<N;i++){
+	lineas[i] = (char*) malloc (sizeof(char)*1024); Por cada posicion voy haciendo memoria *1024 por cada linea
+}
+
+Despues otro bucle for para hacer free de lo que he generado y liberar la memoria.
