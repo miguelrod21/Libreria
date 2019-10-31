@@ -2,7 +2,7 @@
 #define LIBRERIA_H
 #include <stdlib.h>
 #include <stdio.h>
-int head(int,int);
-int tail(int,int);
-int longlines(int,int);
+int head(int);
+int tail(int);
+int longlines(int);
 #endif
