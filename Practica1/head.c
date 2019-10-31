@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 int head(int n1){
+	char buffer [1024];
 	char ** lineas = (char **) malloc (n1*sizeof(char*));
 	for(int i=0;i<n1;i++){
 		lineas[i] = (char*) malloc (sizeof(char)*1024);
@@ -9,7 +11,13 @@ int head(int n1){
 	for(int j=0;j<n1;j++){
 		*lineas[j] = 'a';
 	}
-	
+
+	while(fgets(buffer,1024,stdin)!=NULL){
+		for(int i=0;i<n1;i++){
+			strcpy(lineas[i],buffer); //está mal el bucle, porque en buffer guarda lo que lee. Entonces el for sobreescribe siempre lo ultimo que escribes. Es cuestión de cambiar esto pero eestá ya casi
+		}
+	}
+
 	for(int k=0;k<n1;k++){
 		printf("\n %s",*(lineas+k));
 	}
