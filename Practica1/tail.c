@@ -14,14 +14,14 @@ int tail(int n1){
 			strcpy(lineas[cont],buffer);
 			cont++;
 		}else{
-			for(int i = 0; i < (n1 - 1); i++){
+			for(int i = 0; i < n1; i++){
 				strcpy(lineas[i],lineas[i+1]);
 			}
-		strcpy(lineas[(n1 - 1)],buffer);
+		strcpy(lineas[cont],buffer);
 		}
 		
 	}
-	for(int k = 0; k < n1; k++){
+	for(int k = 0; k < (n1 + 1); k++){
 		printf("%s",*(lineas + k));
 	}
 	free(lineas);
