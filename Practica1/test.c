@@ -4,7 +4,7 @@ int main(int argc, char *argv[]){
 		printf("Error en parámetros. Por favor introduce la opcion head, tail o longlines seguido de un número entero.\n");
 		return 1;
 	}
-	printf("El número pasado es: %s",argv[2]);
+	printf("El número pasado es: %s\n",argv[2]);
 	int sol = 0;
 	int n1 = atoi(argv[2]);
 	int op = atoi(argv[1]);
