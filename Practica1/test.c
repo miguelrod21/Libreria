@@ -1,28 +1,27 @@
 #include "libreria.h"
 int main(int argc, char *argv[]){
-	if(argc!=3){
-		printf("Error en parámetros. Por favor introduce la opcion head, tail o longlines seguido de un número entero.\n");
-		return 1;
-	}
-	printf("El número pasado es: %s\n",argv[2]);
-	int sol = 0;
+	int op;
+	char *comando = argv[1];
 	int n1 = atoi(argv[2]);
-	int op = atoi(argv[1]);
-
-	switch(op){
-	case 1:
-		sol = head(n1);
-		break;
-	case 2:
-		sol=tail(n1);
-		break;
-	case 3:
-		sol=longlines(n1);
-		break;
-	default:
-		printf("Error en segundo parámetro. Por favor introduce el comando deseado.\n");
+	if(argc!=3){
+		fprintf(stderr,"Error en parámetros. Por favor introduce la opcion head, tail o longlines seguido de un número entero.\n");
+		return 1;
+	}else{
+		if(!isdigit(*argv[2])){
+			printf("El segundo parámetro no es válido. Por favor introduce un entero para el número de lineas a mostrar.\n");	
+		return 1;
+		}	
+	}
+	
+	if(strcmp(comando,"head")==0){
+		head(n1);
+	}else if(strcmp(comando,"tail")==0){
+		tail(n1);
+	}else if(strcmp(comando,"longlines")==0){
+		longlines(n1);
+	}else{
+		fprintf(stderr,"Error en el primer parámetro. Por favor introduce el comando deseado(head, tail o longlines)\n");	
 		return 1;
 	}
-	printf("La solucion es: %d\n",sol);
 	return 0;	
 }

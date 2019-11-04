@@ -16,7 +16,7 @@ int head(int n1){
 		}
 	}
 	for(int k=0;k<n1;k++){
-		printf("\n %s",*(lineas+k));
+		printf("%s",*(lineas+k));
 	}
 	free(lineas);
 }
