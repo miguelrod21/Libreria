@@ -1,0 +1,9 @@
+total 2084
+-rw-rw-r-- 1 miguel miguel 306272 nov 21 13:28 enunciado.pdf
+-rw-rw-r-- 1 miguel miguel  20730 nov 21 13:28 libparser.a
+-rw-rw-r-- 1 miguel miguel    267 nov 21 13:29 parser.h
+-rwxr-xr-x 1 miguel miguel 892856 nov 27 12:07 prueba
+-rw-r--r-- 1 miguel miguel   9044 nov 27 12:07 prueba.c
+-rw-r--r-- 1 miguel miguel      0 nov 28 13:15 salida
+-rwxr-xr-x 1 miguel miguel 888760 nov 28 13:15 test
+-rw-rw-r-- 1 miguel miguel   1814 nov 28 13:15 test.c
