@@ -63,7 +63,7 @@ int main(void) {
 				fprintf(stderr, "Fallo el fork() %s/n" , strerror(errno));
 				exit(-1);
 			} else if(pid == 0){ //si es el hijo
-				if(line->redirect_input != NULL){ //si hay redirección de entrada
+					if(line->redirect_input != NULL){ //si hay redirección de entrada
 						int fichero;
 						printf("redirección de entrada: %s\n", line->redirect_input);
 						fichero = open(line->redirect_input, O_RDONLY);
