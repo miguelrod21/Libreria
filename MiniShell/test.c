@@ -115,13 +115,17 @@ int main(void) {
 			}
 		}else{ //Más de 2 comandos
 			pidHijos = malloc(line->ncommands * sizeof(int)); 
-			pipes = (int **) malloc ((line->ncommands-1) * sizeof(int *)); //Reservamos memoria para la matriz de pipes
-			for(i=0;i<line->ncommands;i++){
+			pipes = (int **) malloc ((line -> ncommands - 1) * sizeof(int *)); //Reservamos memoria para la matriz de pipes
+
+			for(i=0;i < line -> ncommands - 1;i++){
 				pipes[i] = (int *) malloc (sizeof(int)*2); 
+                if(pipe(pipes[i]) < 0)
+					fprintf(stderr, "Fallo al crear el pipe %s/n" , strerror(errno));
 			}
-			for(i = 0; i< line->ncommands;i++){
+			for(i = 0; i < line -> ncommands; i++){
 				pid = fork();
-				if(pid<0){
+
+				if(pid < 0){
 					fprintf(stderr, "Ha fallado el fork. %d\n", errno);
 				}else if(pid==0){
 					if(i==0){
@@ -137,8 +141,11 @@ int main(void) {
 								exit(0);
 							}
 						}				
-						close(pipes[0][0]);
+						close (pipes[0][0]);
+                        close (pipes[1][0]);
+                        close (pipes[1][1]);
 						dup2(pipes[0][1],1);
+
 					}else if(i==1){
 						printf("Soy el segundo hijo, comando: %s\n", line->commands[i].filename);
 						close(pipes[0][1]);
@@ -147,21 +154,37 @@ int main(void) {
 						dup2(pipes[1][1],1);
 					}else{
 						printf("Soy el tercer hijo, comando: %s\n", line->commands[i].filename);
-						
+						close (pipes[0][0]);
+                        close (pipes[0][1]);
 						close(pipes[1][1]);	
 						dup2(pipes[1][0],0);
 					}
+
 					execv(line->commands[i].filename, line->commands[i].argv);
+ 
+
 				}else{
-					close(pipes[0][0]);
-					close(pipes[0][1]);
-					close(pipes[1][0]);
-					close(pipes[1][1]);
-					wait(NULL);
-					wait(NULL);
-					wait(NULL);
+                    pidHijos[0] = pid;
+                    pidHijos[1] = pid;
+                    pidHijos[2] = pid;
+					
 				}
 			}
+            close(pipes[0][0]);
+			close(pipes[0][1]);
+			close(pipes[1][0]);
+			close(pipes[1][1]);
+
+			wait(NULL);
+			wait(NULL);
+			wait(NULL);
+
+            //free(pipes[0]);
+            //free(pipes[1]);
+            //free(pipes[2]);
+
+			//free(pipes);
+			//free(pidHijos);
 			printf("Todos los hijos han acabado \n");
 		}
 		printf("msh> ");	
