@@ -179,12 +179,6 @@ int main(void) {
 			wait(NULL);
 			wait(NULL);
 
-            //free(pipes[0]);
-            //free(pipes[1]);
-            //free(pipes[2]);
-
-			//free(pipes);
-			//free(pidHijos);
 			printf("Todos los hijos han acabado \n");
 		}
 		printf("msh> ");	
