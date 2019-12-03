@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/stat.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -16,7 +15,7 @@ int main(void) {
 	pid_t pid;
 	int p[2];
 	int **pipes;
-	int *pidHijos;
+	int entrada, salida, errpipe;
 
 	printf("msh> ");	
 	while (fgets(buf, 1024, stdin)) {
@@ -32,7 +31,6 @@ int main(void) {
 
 				if (line->redirect_input != NULL) {
 					printf("redirección de entrada: %s\n", line->redirect_input);
-					int entrada;
 					entrada = open(line->redirect_input,O_RDONLY);
 					if(entrada!=-1){
 						dup2(entrada,0);
@@ -43,7 +41,6 @@ int main(void) {
 				}
 				if (line->redirect_output != NULL) {
 					printf("redirección de salida: %s\n", line->redirect_output);
-					int salida;
 					salida = open(line->redirect_output,O_WRONLY | O_CREAT | O_TRUNC, 0644);
 					if(salida<0){
 						fprintf(stderr, "%s: Error %d.\nError al leer fichero de salida. \n",line->redirect_output, errno);
@@ -67,7 +64,7 @@ int main(void) {
 			}else{ // Código PADRE
 				waitpid(pid,NULL,0);
 			}
-		}else if(line->ncommands == 2){ //Más de 1 comando ------------------------------------------------------------------------------
+		}else if(line->ncommands == 2){ //2 comandos ------------------------------------------------------------------------------
 
 			pipe(p);
 			pid =fork();
@@ -77,7 +74,6 @@ int main(void) {
 			}else if(pid==0){ //codigo del hijo1
 				if (line->redirect_input != NULL) {
 					printf("redirección de entrada: %s\n", line->redirect_input);
-					int entrada;
 					entrada = open(line->redirect_input,O_RDONLY);
 					if(entrada!=-1){
 						dup2(entrada,0);
@@ -94,7 +90,6 @@ int main(void) {
 				if(pid == 0){ //codigo hijo2
 					if (line->redirect_output != NULL) {
 					printf("redirección de salida: %s\n", line->redirect_output);
-					int salida;
 					salida = open(line->redirect_output,O_WRONLY | O_CREAT | O_TRUNC, 0644);
 					if(salida<0){
 						fprintf(stderr, "%s: Error %d.\nError al leer fichero de salida. \n",line->redirect_output, errno);
@@ -114,25 +109,24 @@ int main(void) {
 				}
 			}
 		}else{ //Más de 2 comandos
-			pidHijos = malloc(line->ncommands * sizeof(int)); 
-			pipes = (int **) malloc ((line -> ncommands - 1) * sizeof(int *)); //Reservamos memoria para la matriz de pipes
-
-			for(i=0;i < line -> ncommands - 1;i++){
+			pipes = (int **) malloc ((line->ncommands-1) * sizeof(int *)); //Reservamos memoria para la matriz de pipes
+			for(i=0;i<line->ncommands-1;i++){
 				pipes[i] = (int *) malloc (sizeof(int)*2); 
-                if(pipe(pipes[i]) < 0)
-					fprintf(stderr, "Fallo al crear el pipe %s/n" , strerror(errno));
+				errpipe = pipe(pipes[i]);
+				if(errpipe<0){
+					fprintf(stderr, "Error en el pipe: %d. Error %d\n",i, errno );
+				}
 			}
-			for(i = 0; i < line -> ncommands; i++){
-				pid = fork();
 
-				if(pid < 0){
+			for(i = 0; i< line->ncommands;i++){
+				pid = fork();
+				if(pid<0){
 					fprintf(stderr, "Ha fallado el fork. %d\n", errno);
 				}else if(pid==0){
 					if(i==0){
 						printf("Soy el primer hijo, comando: %s\n", line->commands[i].filename);
 						if (line->redirect_input != NULL) {
 							printf("redirección de entrada: %s\n", line->redirect_input);
-							int entrada;
 							entrada = open(line->redirect_input,O_RDONLY);
 							if(entrada!=-1){
 								dup2(entrada,0);
@@ -140,13 +134,13 @@ int main(void) {
 								fprintf(stderr, "%s: Error %d.\nError al leer fichero de entrada. \n",line->redirect_input,errno);
 								exit(0);
 							}
-						}				
+						}		
 						close (pipes[0][0]);
                         close (pipes[1][0]);
                         close (pipes[1][1]);
 						dup2(pipes[0][1],1);
-
-					}else if(i==1){
+						
+					}else if(i>0 && i<line->ncommands-1){
 						printf("Soy el segundo hijo, comando: %s\n", line->commands[i].filename);
 						close(pipes[0][1]);
 						dup2(pipes[0][0],0);
@@ -154,33 +148,44 @@ int main(void) {
 						dup2(pipes[1][1],1);
 					}else{
 						printf("Soy el tercer hijo, comando: %s\n", line->commands[i].filename);
-						close (pipes[0][0]);
-                        close (pipes[0][1]);
-						close(pipes[1][1]);	
-						dup2(pipes[1][0],0);
+						if (line->redirect_output != NULL) {
+							printf("redirección de salida: %s\n", line->redirect_output);
+							salida = open(line->redirect_output,O_WRONLY | O_CREAT | O_TRUNC, 0644);
+							if(salida<0){
+								fprintf(stderr, "%s: Error %d.\nError al leer fichero de salida. \n",line->redirect_output, errno);
+								exit(0);
+							}else{
+								dup2(salida,1);
+							}
+						}
+						for(j=0; j<line->ncommands-2; j++){ 
+							close(pipes[j][1]);
+							close(pipes[j][0]);
+						}
+						close(pipes[i-1][1]);
+						dup2(pipes[i-1][0],0);
 					}
-
 					execv(line->commands[i].filename, line->commands[i].argv);
- 
-
-				}else{
-                    pidHijos[0] = pid;
-                    pidHijos[1] = pid;
-                    pidHijos[2] = pid;
+					printf("Error al ejecutar %s\n", line->commands[i].filename);
+				}else{ //el padre
 					
 				}
+				
 			}
-            close(pipes[0][0]);
-			close(pipes[0][1]);
-			close(pipes[1][0]);
-			close(pipes[1][1]);
-
-			wait(NULL);
-			wait(NULL);
-			wait(NULL);
-
-			printf("Todos los hijos han acabado \n");
+			for(j=0; j<line->ncommands-1; j++){ //Cerramos todos los pipes
+				close(pipes[j][1]);
+				close(pipes[j][0]);
+			}
+			printf("Esperando... \n");
+			for(i=0;i<line->ncommands;i++){
+				wait(NULL);
+			}
+			for(i=0;i<line->ncommands-1;i++){
+				free(pipes[i]);
+			}
+			free(pipes);
 		}
+		
 		printf("msh> ");	
 	}
 	printf("\n");
