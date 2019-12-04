@@ -49,12 +49,6 @@ int main(void) {
 						dup2(salida,1);
 					}
 				}
-				if (line->redirect_error != NULL) {
-					printf("redirección de error: %s\n", line->redirect_error);
-				}
-				if (line->background) {
-					printf("comando a ejecutarse en background\n");
-				} 
 
 				if((line->commands[i].filename)!=NULL){
 					execvp(line->commands[0].filename,line->commands[0].argv);
@@ -62,9 +56,9 @@ int main(void) {
 					printf("%s: No se encuentra el mandato\n", *line->commands[0].argv);
 				}
 			}else{ // Código PADRE
-				waitpid(pid,NULL,0);
+				wait(NULL);
 			}
-		}else if(line->ncommands == 2){ //2 comandos ------------------------------------------------------------------------------
+		}else if(line->ncommands == 2){ //2 comandos entrada + salida------------------------------------------------------------------------------
 
 			pipe(p);
 			pid =fork();
@@ -100,7 +94,11 @@ int main(void) {
 				}
 					close(p[1]);	
 					dup2(p[0],0);
-					execv(line->commands[1].filename, line->commands[1].argv);
+					if((line->commands[i].filename)!=NULL){
+						execvp(line->commands[i].filename,line->commands[i].argv);
+					}else{
+						printf("%s: No se encuentra el mandato\n", *line->commands[i].argv);
+					}
 				}else{ //codigo padre
 					close(p[0]);
 					close(p[1]);
@@ -109,7 +107,7 @@ int main(void) {
 				}
 			}
 		}else{ //Más de 2 comandos
-			pipes = (int **) malloc ((line->ncommands-1) * sizeof(int *)); //Reservamos memoria para la matriz de pipes
+			pipes = (int **) malloc ((line->ncommands-1) * sizeof(int *)); 
 			for(i=0;i<line->ncommands-1;i++){
 				pipes[i] = (int *) malloc (sizeof(int)*2); 
 				errpipe = pipe(pipes[i]);
@@ -135,19 +133,36 @@ int main(void) {
 								exit(0);
 							}
 						}		
+						for(j=i+1; j<line->ncommands-1; j++){ 
+							close(pipes[j][1]);
+							close(pipes[j][0]);
+						}
 						close (pipes[0][0]);
                         close (pipes[1][0]);
                         close (pipes[1][1]);
 						dup2(pipes[0][1],1);
 						
 					}else if(i>0 && i<line->ncommands-1){
-						printf("Soy el segundo hijo, comando: %s\n", line->commands[i].filename);
-						close(pipes[0][1]);
-						dup2(pipes[0][0],0);
-						close(pipes[1][0]);
-						dup2(pipes[1][1],1);
+						printf("Soy un hijo del medio[%d], comando: %s\n", i,line->commands[i].filename);
+						if(i==line->ncommands-2 && line->ncommands != 3){
+							for(j=0; j<i-1; j++){ 
+								close(pipes[j][1]);
+								close(pipes[j][0]);	
+							}
+						}
+						if(i!=1 && line->ncommands > 3){ 
+							for(j=0; j<i-1; j++){ 
+								close(pipes[j][1]);
+								close(pipes[j][0]);
+							}
+							
+						}
+						close(pipes[i-1][1]);
+						dup2(pipes[i-1][0],0);
+						close(pipes[i][0]);
+						dup2(pipes[i][1],1);
 					}else{
-						printf("Soy el tercer hijo, comando: %s\n", line->commands[i].filename);
+						printf("Soy el ultimo hijo, comando: %s\n", line->commands[i].filename);
 						if (line->redirect_output != NULL) {
 							printf("redirección de salida: %s\n", line->redirect_output);
 							salida = open(line->redirect_output,O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -165,8 +180,11 @@ int main(void) {
 						close(pipes[i-1][1]);
 						dup2(pipes[i-1][0],0);
 					}
-					execv(line->commands[i].filename, line->commands[i].argv);
-					printf("Error al ejecutar %s\n", line->commands[i].filename);
+					if((line->commands[i].filename)!=NULL){
+						execvp(line->commands[i].filename,line->commands[i].argv);
+					}else{
+						printf("%s: No se encuentra el mandato\n", *line->commands[i].argv);
+					}
 				}else{ //el padre
 					
 				}
