@@ -11,7 +11,7 @@
 int main(void) {
 	char buf[1024];
 	tline * line;
-	int i,j,n, w;
+	int i,j,n,w,status;
 	pid_t pid;
 	int p[2];
 	int **pipes;
@@ -95,7 +95,7 @@ int main(void) {
 					close(p[1]);	
 					dup2(p[0],0);
 					if((line->commands[i].filename)!=NULL){
-						execvp(line->commands[i].filename,line->commands[i].argv);
+						execvp(line->commands[1].filename,line->commands[1].argv);
 					}else{
 						printf("%s: No se encuentra el mandato\n", *line->commands[i].argv);
 					}
@@ -144,13 +144,13 @@ int main(void) {
 						
 					}else if(i>0 && i<line->ncommands-1){
 						printf("Soy un hijo del medio[%d], comando: %s\n", i,line->commands[i].filename);
-						if(i==line->ncommands-2 && line->ncommands != 3){
+						if(i==1){
 							for(j=0; j<i-1; j++){ 
 								close(pipes[j][1]);
 								close(pipes[j][0]);	
 							}
 						}
-						if(i!=1 && line->ncommands > 3){ 
+						if(i!=1){ 
 							for(j=0; j<i-1; j++){ 
 								close(pipes[j][1]);
 								close(pipes[j][0]);
@@ -190,7 +190,7 @@ int main(void) {
 				}
 				
 			}
-			for(j=0; j<line->ncommands-1; j++){ //Cerramos todos los pipes
+			for(j=0; j<line->ncommands-1; j++){ 
 				close(pipes[j][1]);
 				close(pipes[j][0]);
 			}
