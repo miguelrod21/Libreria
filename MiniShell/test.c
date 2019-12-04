@@ -16,22 +16,27 @@ int main(void) {
 	int p[2];
 	int **pipes;
 	int entrada, salida, error, errpipe;
+    char *dir;
 
-	printf("msh> ");	
+    dir = "pwd";
+	printf("msh--%s> ", dir);	
 	while (fgets(buf, 1024, stdin)) {
 		line = tokenize(buf);
 		if (line==NULL) {
 			continue;
 		}
 
-				if(line->ncommands == 1){
+		if(line->ncommands == 1){
 			
             if (strcmp(line -> commands[0].argv[0], "cd") == 0){
                 if (line -> commands[0].argc == 1){
-                    chdir(getenv("HOME"));                   
+                    chdir(getenv("HOME"));    
+                    dir = getenv("HOME");               
                 }else{
                     if (chdir(line -> commands[0].argv[1]) != 0){
                         printf("Ese directorio no existe. \n");
+                    }else{
+                        dir = line -> commands[0].argv[1];                    
                     }
                 }
             }
@@ -252,7 +257,7 @@ int main(void) {
 			free(pipes);
 		}
 		
-		printf("msh> ");	
+		printf("msh--%s> ", dir);	
 	}
 	printf("\n");
 	return 0;
