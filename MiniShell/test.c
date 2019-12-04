@@ -24,40 +24,53 @@ int main(void) {
 			continue;
 		}
 		if(line->ncommands == 1){
-			pid = fork();
-			if(pid<0){
-							fprintf(stderr,"Fallo fork \n%s\n",strerror(errno));
-			}else if(pid==0){// Código HIJO
+			
+            if (strcmp(line -> commands[0].argv[0], "cd") == 0){
+                if (line -> commands[0].argc == 1){
+                    chdir(getenv("HOME"));                   
+                }else{
+                    if (chdir(line -> commands[0].argv[1]) != 0){
+                        printf("Ese directorio no existe. \n");
+                    }
+                }
+            }
+            else{
+                pid = fork();
+			    if(pid<0){
+							    fprintf(stderr,"Fallo fork \n%s\n",strerror(errno));
+			    }else if(pid==0){// Código HIJO
 
-				if (line->redirect_input != NULL) {
-					printf("redirección de entrada: %s\n", line->redirect_input);
-					entrada = open(line->redirect_input,O_RDONLY);
-					if(entrada!=-1){
-						dup2(entrada,0);
-					}else{
-						fprintf(stderr, "%s: Error %d.\nError al leer fichero de entrada. \n",line->redirect_input,errno);
-						exit(0);
-					}
-				}
-				if (line->redirect_output != NULL) {
-					printf("redirección de salida: %s\n", line->redirect_output);
-					salida = open(line->redirect_output,O_WRONLY | O_CREAT | O_TRUNC, 0644);
-					if(salida<0){
-						fprintf(stderr, "%s: Error %d.\nError al leer fichero de salida. \n",line->redirect_output, errno);
-						exit(0);
-					}else{
-						dup2(salida,1);
-					}
-				}
+				    if (line->redirect_input != NULL) {
+					    printf("redirección de entrada: %s\n", line->redirect_input);
+					    entrada = open(line->redirect_input,O_RDONLY);
+					    if(entrada!=-1){
+						    dup2(entrada,0);
+					    }else{
+						    fprintf(stderr, "%s: Error %d.\nError al leer fichero de entrada. \n",line->redirect_input,errno);
+						    exit(0);
+					    }
+				    }
+				    if (line->redirect_output != NULL) {
+					    printf("redirección de salida: %s\n", line->redirect_output);
+					    salida = open(line->redirect_output,O_WRONLY | O_CREAT | O_TRUNC, 0644);
+					    if(salida<0){
+						    fprintf(stderr, "%s: Error %d.\nError al leer fichero de salida. \n",line->redirect_output, errno);
+						    exit(0);
+					    }else{
+						    dup2(salida,1);
+					    }
+				    }
 
-				if((line->commands[i].filename)!=NULL){
-					execvp(line->commands[0].filename,line->commands[0].argv);
-				}else{
-					printf("%s: No se encuentra el mandato\n", *line->commands[0].argv);
-				}
-			}else{ // Código PADRE
-				wait(NULL);
-			}
+				    if((line->commands[i].filename)!=NULL){
+					    execvp(line->commands[0].filename,line->commands[0].argv);
+				    }else{
+					    printf("%s: No se encuentra el mandato\n", *line->commands[0].argv);
+				    }
+			    }else{ // Código PADRE
+				    wait(NULL);
+			    }
+            }
+
 		}else if(line->ncommands == 2){ //2 comandos entrada + salida------------------------------------------------------------------------------
 
 			pipe(p);
