@@ -15,6 +15,7 @@ int main(void) {
 	pid_t pid;
 	int p[2];
 	int **pipes;
+	int *pidHijos;
 	int entrada, salida, error, errpipe;
 	char dir[1024];
 
@@ -146,6 +147,8 @@ int main(void) {
 			}
 		}else{ //Más de 2 comandos
 			pipes = (int **) malloc ((line->ncommands-1) * sizeof(int *)); 
+			pidHijos = malloc(line->ncommands * sizeof(int)); 
+
 			for(i=0;i<line->ncommands-1;i++){
 				pipes[i] = (int *) malloc (sizeof(int)*2); 
 				errpipe = pipe(pipes[i]);
@@ -163,7 +166,7 @@ int main(void) {
 					if(pid<0){
 						fprintf(stderr, "Ha fallado el fork. %d\n", errno);
 					}else if(pid==0){
-						if(i==0){
+						if(i==0){ //primero
 							if (line->redirect_input != NULL) {
 								printf("redirección de entrada: %s\n", line->redirect_input);
 								entrada = open(line->redirect_input,O_RDONLY);
@@ -191,14 +194,14 @@ int main(void) {
 	                        close (pipes[1][1]);
 							dup2(pipes[0][1],1);
 							
-						}else if(i>0 && i<line->ncommands-1){
-							if(i==1){
+						}else if(i>0 && i<line->ncommands-1){ // del medio
+							if(i==1){ //segundo
 								for(j=0; j<i-1; j++){ 
 									close(pipes[j][1]);
 									close(pipes[j][0]);	
 								}
 							}
-							if(i!=1){ 
+							if(i!=1){ //otro
 								for(j=0; j<i-1; j++){ 
 									close(pipes[j][1]);
 									close(pipes[j][0]);
@@ -209,7 +212,7 @@ int main(void) {
 							dup2(pipes[i-1][0],0);
 							close(pipes[i][0]);
 							dup2(pipes[i][1],1);
-						}else{
+						}else{ // el ultimo
 							if (line->redirect_output != NULL) {
 								printf("redirección de salida: %s\n", line->redirect_output);
 								salida = open(line->redirect_output,O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -241,7 +244,7 @@ int main(void) {
 							printf("%s: No se encuentra el mandato\n", *line->commands[i].argv);
 						}
 					}else{ //el padre
-						
+						pidHijos[i]=pid;
 					}
 				}
 				
@@ -251,7 +254,7 @@ int main(void) {
 				close(pipes[j][0]);
 			}
 			for(i=0;i<line->ncommands;i++){
-				wait(NULL);
+				waitpid(pidHijos[i],NULL,0);
 			}
 			for(i=0;i<line->ncommands-1;i++){
 				free(pipes[i]);
