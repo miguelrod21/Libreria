@@ -25,10 +25,7 @@ int main(void) {
 		if (line==NULL) {
 			continue;
 		}
-
-				if(line->ncommands == 1){
-			
-            if (strcmp(line -> commands[0].argv[0], "cd") == 0){
+           if (strcmp(line -> commands[0].argv[0], "cd") == 0){
                 if (line -> commands[0].argc == 1){
                     chdir(getenv("HOME"));                   
                 }else{
@@ -36,8 +33,8 @@ int main(void) {
                         printf("Ese directorio no existe. \n");
                     }
                 }
-            }
-            else{
+            }else if(line->ncommands == 1){
+ 
                 pid = fork();
 				if(pid<0){
 					fprintf(stderr,"Fallo fork \n%s\n",strerror(errno));
@@ -79,9 +76,7 @@ int main(void) {
 				}else{ // Código PADRE
 					wait(NULL);
 				}
-			}
 		}else if(line->ncommands == 2){ //2 comandos entrada + salida------------------------------------------------------------------------------
-
 			pipe(p);
 			pid =fork();
 			if(pid<0){
@@ -155,6 +150,10 @@ int main(void) {
 			}
 
 			for(i = 0; i< line->ncommands;i++){
+				if(strcmp(line->commands[i].argv[0], "cd") == 0){
+					printf("Error en el comando cd.\n");
+					i=line->ncommands;
+				}
 				pid = fork();
 				if(pid<0){
 					fprintf(stderr, "Ha fallado el fork. %d\n", errno);
